@@ -65,23 +65,23 @@ function checkConfig() {
           if (Object.keys(existingHosts).includes(host)) {
             console.log('host exists: ', host);
             const recordId = existingHosts[host].id;
-            (async () => {
-              const dnsEditResp = await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records/${recordId}`, {
-                method: 'PUT',
-                body,
-                form: true,
-                json: true,
-                headers: {
-                  "X-Auth-Email": cfEmail,
-                  "X-Auth-Key": cfToken,
-                  "Content-Type": "application/json"
-                }
-              });
-            }).catch(err => console.error('sourav-traefik-docker: ', err));
+            // (async () => {
+            //   const dnsEditResp = await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records/${recordId}`, {
+            //     method: 'PUT',
+            //     body,
+            //     form: true,
+            //     json: true,
+            //     headers: {
+            //       "X-Auth-Email": cfEmail,
+            //       "X-Auth-Key": cfToken,
+            //       "Content-Type": "application/json"
+            //     }
+            //   });
+            // }).catch(err => console.error('sourav-traefik-docker: ', err));
           } else {
             console.log('create host: ', host);
 
-            (async () => {
+            try {
               const dnsCreateResp = await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`, {
                 method: 'POST',
                 body,
@@ -94,7 +94,9 @@ function checkConfig() {
                 }
               });
               console.log('created host: ', host, dnsCreateResp.body);
-            }).catch(err => console.error('sourav-traefik-docker: ', err));
+            } catch (error) {
+              console.error('sourav-traefik-docker: ', error);
+            }
           }
         });
       } catch (error) {
