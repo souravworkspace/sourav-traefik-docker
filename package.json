@@ -1,6 +1,6 @@
 {
   "name": "sourav-traefik-docker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Testing Docker with traefik api",
   "repository": "git@github.com:souravworkspace/sourav-traefik-docker.git",
   "author": "Sourav Halder",
