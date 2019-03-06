@@ -9,12 +9,14 @@ function checkConfig() {
         // console.log('sourav-traefik-docker: ', response.body);
         const hosts = Object.keys(response.body).map(str => str.replace(/\/$/, ''));
         const hostRegExp = new RegExp(traefikHost);
-        const traefikHostIp = await got('http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip', {
+        const respMeta = await got('http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip', {
           headers: {
             "Metadata-Flavor": "Google"
           }
         });
+        const traefikHostIp = respMeta.body;
         const allowedHosts = hosts.filter(host => hostRegExp.test(host));
+        console.log('traefik host: ', traefikHost);
         console.log('machine ip: ', traefikHostIp);
         console.log('allowed hosts: ', allowedHosts);
       } catch (error) {
