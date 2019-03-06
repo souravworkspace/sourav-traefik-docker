@@ -51,8 +51,6 @@ function checkConfig() {
           return all;
         }, {});
 
-        console.log('existing: ', existingHosts);
-
         allowedHosts.forEach(async (host) => {
           const body = {
             name: host,
@@ -65,24 +63,26 @@ function checkConfig() {
           if (Object.keys(existingHosts).includes(host)) {
             console.log('host exists: ', host);
             const recordId = existingHosts[host].id;
-            // (async () => {
-            //   const dnsEditResp = await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records/${recordId}`, {
-            //     method: 'PUT',
-            //     body,
-            //     form: true,
-            //     json: true,
-            //     headers: {
-            //       "X-Auth-Email": cfEmail,
-            //       "X-Auth-Key": cfToken,
-            //       "Content-Type": "application/json"
-            //     }
-            //   });
-            // }).catch(err => console.error('sourav-traefik-docker: ', err));
+            try {
+              const dnsEditResp = await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records/${recordId}`, {
+                method: 'PUT',
+                body,
+                form: true,
+                json: true,
+                headers: {
+                  "X-Auth-Email": cfEmail,
+                  "X-Auth-Key": cfToken,
+                  "Content-Type": "application/json"
+                }
+              });
+            } catch (error) {
+              console.error('sourav-traefik-docker: ', error);
+            }
           } else {
             console.log('create host: ', host);
 
             try {
-              const dnsCreateResp = await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`, {
+              await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`, {
                 method: 'POST',
                 body,
                 json: true,
@@ -92,7 +92,6 @@ function checkConfig() {
                   "Content-Type": "application/json"
                 }
               });
-              console.log('created host: ', host, dnsCreateResp.body);
             } catch (error) {
               console.error('sourav-traefik-docker: ', error);
             }
