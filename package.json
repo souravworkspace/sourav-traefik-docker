@@ -1,0 +1,16 @@
+{
+  "name": "sourav-traefik-docker",
+  "version": "1.0.0",
+  "description": "Testing Docker with traefik api",
+  "repository": "git@github.com:souravworkspace/sourav-traefik-docker.git",
+  "author": "Sourav Halder",
+  "scripts": {
+    "dev": "docker build -t sourav-traefik-docker . && docker run sourav-traefik-docker",
+    "build": "docker build -t sourav-traefik-docker .",
+    "start": "node ./src/index.js",
+    "postversion": "git push origin && git push origin --tags"
+  },
+  "dependencies": {
+    "got": "^9.6.0"
+  }
+}
