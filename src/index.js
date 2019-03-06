@@ -67,7 +67,6 @@ function checkConfig() {
               const dnsEditResp = await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records/${recordId}`, {
                 method: 'PUT',
                 body,
-                form: true,
                 json: true,
                 headers: {
                   "X-Auth-Email": cfEmail,
