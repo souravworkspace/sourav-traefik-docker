@@ -7,6 +7,8 @@ const cloudflareHeaders = {
   "X-Auth-Email": cfEmail,
   "X-Auth-Key": cfToken,
 };
+const ONE_MIN = 60 * 1000;
+const ONE_HOUR = ONE_MIN * 60;
 
 let zoneId = null;
 let existingHosts = {};
@@ -73,6 +75,7 @@ function checkForUpdate() {
               headers: cloudflareHeaders,
             });
             if (putResp.body.success) console.log('Updated DNS: ', host);
+            fetchExistingDNS();
           })().catch(err => handleError(err));
         } else {
           console.log('DNS record is correct', host);
@@ -86,6 +89,7 @@ function checkForUpdate() {
             headers: cloudflareHeaders,
           });
           if (postResp.body.success) console.log('Added DNS: ', host);
+          fetchExistingDNS();
         })().catch(err => handleError(err));
       }
     });
@@ -93,7 +97,8 @@ function checkForUpdate() {
 }
 
 if (fetchExistingDNS()) {
-  setInterval(checkForUpdate, 60000);
+  setInterval(checkForUpdate, ONE_MIN);
+  setInterval(fetchExistingDNS, ONE_HOUR);
 } else {
   console.error('Can not fetch existing records');
 }
