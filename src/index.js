@@ -3,12 +3,17 @@ let existingHosts = {};
 const traefikHost = process.env.TRAEFIK_HOST_NAME;
 const cfEmail = process.env.CLOUDFLARE_EMAIL;
 const cfToken = process.env.CLOUDFLARE_TOKEN;
+const cloudflareHeaders = {
+  "X-Auth-Email": cfEmail,
+  "X-Auth-Key": cfToken,
+  "Content-Type": "application/json"
+};
+
 function checkConfig() {
   console.log('checking');
   (async () => {
       try {
         const traefikResp = await got('http://localhost:8080/api/providers/kubernetes/frontends', { json: true });
-        // console.log('sourav-traefik-docker: ', response.body);
         const hosts = Object.keys(traefikResp.body).map(str => str.replace(/\/$/, ''));
         const hostRegExp = new RegExp(`${traefikHost}`);
         const respMeta = await got('http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip', {
@@ -25,11 +30,7 @@ function checkConfig() {
 
         const cloudResp = await got(`https://api.cloudflare.com/client/v4/zones?name=${traefikHost}`, {
           json: true,
-          headers: {
-            "X-Auth-Email": cfEmail,
-            "X-Auth-Key": cfToken,
-            "Content-Type": "application/json"
-          }
+          headers: cloudflareHeaders,
         });
         const zoneId = cloudResp.body.result[0].id;
 
@@ -37,11 +38,7 @@ function checkConfig() {
 
         const dnsResp = await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records?name=${traefikHost}&type=A&order=name&direction=desc&per_page=100&match=all`, {
           json: true,
-          headers: {
-            "X-Auth-Email": cfEmail,
-            "X-Auth-Key": cfToken,
-            "Content-Type": "application/json"
-          }
+          headers: cloudflareHeaders,
         });
         
         const { result: dnsRecords } = dnsResp.body;
@@ -51,7 +48,7 @@ function checkConfig() {
           return all;
         }, {});
 
-        allowedHosts.forEach(async (host) => {
+        allowedHosts.forEach((host) => {
           const body = {
             name: host,
             type: "A",
@@ -61,39 +58,31 @@ function checkConfig() {
           };
           
           if (Object.keys(existingHosts).includes(host)) {
-            console.log('host exists: ', host);
+            console.log('host exists: ', host, existingHosts[host]);
             const recordId = existingHosts[host].id;
-            try {
-              const dnsEditResp = await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records/${recordId}`, {
+            (async () => {
+              await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records/${recordId}`, {
                 method: 'PUT',
                 body,
                 json: true,
-                headers: {
-                  "X-Auth-Email": cfEmail,
-                  "X-Auth-Key": cfToken,
-                  "Content-Type": "application/json"
-                }
+                headers: cloudflareHeaders,
               });
-            } catch (error) {
-              console.error('sourav-traefik-docker: ', error);
-            }
+            })().catch(err => {
+              console.error('sourav-traefik-docker: ', err);
+            });
           } else {
             console.log('create host: ', host);
 
-            try {
+            (async () => {
               await got(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`, {
                 method: 'POST',
                 body,
                 json: true,
-                headers: {
-                  "X-Auth-Email": cfEmail,
-                  "X-Auth-Key": cfToken,
-                  "Content-Type": "application/json"
-                }
+                headers: cloudflareHeaders,
               });
-            } catch (error) {
-              console.error('sourav-traefik-docker: ', error);
-            }
+            })().catch(err => {
+              console.error('sourav-traefik-docker: ', err);
+            });
           }
         });
       } catch (error) {
